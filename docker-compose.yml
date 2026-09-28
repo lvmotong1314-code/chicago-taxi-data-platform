@@ -41,6 +41,7 @@
 version: '3'
 x-airflow-common:
   &airflow-common
+  image: chicago-taxi-airflow:2.2.2
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
@@ -72,12 +73,17 @@ x-airflow-common:
     - ./dbt:/opt/dbt
     - ./great_expectations:/opt/great_expectations
     - ./db:/opt/db
+    - /var/run/docker.sock:/var/run/docker.sock
   user: "${AIRFLOW_UID:-50000}:0"
+  group_add:
+    - "${DOCKER_GID}"
   depends_on:
     &airflow-common-depends-on
     redis:
       condition: service_healthy
     postgres:
+      condition: service_healthy
+    postgres_local:
       condition: service_healthy
 
 
@@ -339,6 +345,7 @@ services:
         condition: service_healthy
 
   spark:
+    image: chicago-taxi-spark:1.0
     build:
       context: .
       dockerfile: ./spark.Dockerfile
@@ -349,7 +356,7 @@ services:
       - POSTGRES_HOST=postgres_local
       - POSTGRES_PORT=5432
     volumes:
-      - .:/app
+      - taxi-parquet-data:/app/data/parquet
     working_dir: /app
     depends_on:
       postgres_local:
@@ -358,3 +365,9 @@ services:
 volumes:
   postgres-db-volume:
   taxi-warehouse-data:
+  taxi-parquet-data:
+    name: taxi-parquet-data
+
+networks:
+  default:
+    name: project1-network

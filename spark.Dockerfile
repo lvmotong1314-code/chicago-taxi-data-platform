@@ -11,3 +11,5 @@ RUN mkdir -p /opt/jdbc && curl -L https://jdbc.postgresql.org/download/postgresq
 ENV PYSPARK_PYTHON=python3
 
 WORKDIR /app
+
+COPY spark/jobs/ /app/spark/jobs/

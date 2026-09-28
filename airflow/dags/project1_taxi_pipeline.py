@@ -3,6 +3,9 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 
+from airflow.providers.docker.operators.docker import DockerOperator
+from docker.types import Mount
+
 
 default_args = {
     "retries": 2,
@@ -46,6 +49,31 @@ with DAG(
         execution_timeout=timedelta(minutes=10),
     )
 
+    spark_batch = DockerOperator(
+        task_id="spark_batch",
+        image="chicago-taxi-spark:1.0",
+        command="spark-submit --jars /opt/jdbc/postgresql.jar /app/spark/jobs/taxi_batch.py",
+        docker_url="unix://var/run/docker.sock",
+        network_mode="project1-network",
+        environment={
+            "POSTGRES_PASSWORD": "docker",
+            "POSTGRES_USER": "docker",
+            "POSTGRES_DB": "taxi_warehouse",
+            "POSTGRES_HOST": "postgres_local",
+            "POSTGRES_PORT": "5432",
+        },
+        mounts=[
+            Mount(
+                source="taxi-parquet-data",
+                target="/app/data/parquet",
+                type="volume",
+            )
+        ],
+        mount_tmp_dir=False,
+        auto_remove=True,
+        execution_timeout=timedelta(minutes=10),
+    )
+
     quality_gate = BashOperator(
         task_id="quality_gate",
         bash_command=(
@@ -58,8 +86,11 @@ with DAG(
 
     publish = BashOperator(
         task_id="publish",
-        bash_command="echo 'Quality gate passed. Chicago Taxi marts are ready for downstream consumption.'",
+        bash_command="echo 'All quality gates passed. Chicago Taxi marts and partitioned Parquet outputs are ready for downstream consumption.'",
         retries=0,
     )
 
-    check_environment >> ingest_raw >> dbt_transform >> quality_gate >> publish
+    check_environment >> ingest_raw
+    ingest_raw >> [dbt_transform, spark_batch]
+    dbt_transform >> quality_gate
+    [quality_gate, spark_batch] >> publish
