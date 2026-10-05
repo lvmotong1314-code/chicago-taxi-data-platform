@@ -40,3 +40,11 @@ Each raw record includes:
 Raw preserves the source representation as closely as practical.
 
 Type conversion and basic normalization belong in the dbt staging layer.
+
+## Source Availability
+
+The upstream Chicago Taxi Trips dataset is published with a delayed,
+batch-oriented cadence rather than as a real-time daily feed.
+
+Airflow therefore uses a monthly processing interval with a source
+availability sensor before ingestion begins.

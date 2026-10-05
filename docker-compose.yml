@@ -38,7 +38,6 @@
 #
 # Feel free to modify this file to suit your needs.
 ---
-version: '3'
 x-airflow-common:
   &airflow-common
   image: chicago-taxi-airflow:2.2.2
@@ -69,9 +68,7 @@ x-airflow-common:
   volumes:
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/logs:/opt/airflow/logs
-    - ./airflow/plugins:/opt/airflow/plugins
     - ./dbt:/opt/dbt
-    - ./great_expectations:/opt/great_expectations
     - ./db:/opt/db
     - /var/run/docker.sock:/var/run/docker.sock
   user: "${AIRFLOW_UID:-50000}:0"
@@ -326,7 +323,11 @@ services:
     
 volumes:
   postgres-db-volume:
+    name: project1-airflow-postgres-data
+
   taxi-warehouse-data:
+    name: taxi-warehouse-data
+    
   taxi-parquet-data:
     name: taxi-parquet-data
 

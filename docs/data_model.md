@@ -8,7 +8,7 @@ A taxi trip completed in the City of Chicago taxi system.
 
 `fct_taxi_trips` has one row per unique taxi trip, identified by `trip_id`.
 
-## Initial Dimensional Model
+## Dimensional Model
 
 ### Fact
 
