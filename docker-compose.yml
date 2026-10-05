@@ -269,6 +269,8 @@ services:
       - airflow
 
   flower:
+    profiles:
+      - debug
     <<: *airflow-common
     command: celery flower
     ports:
@@ -296,55 +298,15 @@ services:
     container_name: "postgres_local"
     volumes:
       - taxi-warehouse-data:/var/lib/postgresql/data
+      - ./db/scripts/sql/create_tables.sql:/docker-entrypoint-initdb.d/001_create_tables.sql:ro
     healthcheck:
             test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
             timeout: 20s
             retries: 10
 
-  taxi-ingestion:
-    build: 
-      dockerfile: ./db.Dockerfile
-    environment:
-      - POSTGRES_PASSWORD=docker
-      - POSTGRES_USER=docker
-      - POSTGRES_DB=taxi_warehouse
-      - POSTGRES_HOST=postgres_local
-      - POSTGRES_PORT=5432
-      - CHICAGO_APP_TOKEN=${CHICAGO_APP_TOKEN}
-    volumes:
-      - .:/app
-    working_dir: /app
-    depends_on:
-      postgres_local:
-        condition: service_healthy
-
-
-  great_expectations_docs:
-    image: dockersamples/static-site
-    volumes:
-      - ./great_expectations/uncommitted/data_docs/local_site:/usr/share/nginx/html
-    ports:
-      - "81:80"
-    container_name: "great_expectations_docs"
-
-  dbt:
-    build:
-      context: .
-      dockerfile: ./dbt.Dockerfile
-    environment:
-      - POSTGRES_PASSWORD=docker
-      - POSTGRES_USER=docker
-      - POSTGRES_DB=taxi_warehouse
-      - POSTGRES_HOST=postgres_local
-      - POSTGRES_PORT=5432
-    volumes:
-      - .:/app
-    working_dir: /app/dbt/chicago_taxi
-    depends_on:
-      postgres_local:
-        condition: service_healthy
-
   spark:
+    profiles:
+      - manual
     image: chicago-taxi-spark:1.0
     build:
       context: .
