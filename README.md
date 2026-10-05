@@ -4,6 +4,8 @@ A containerized batch data platform for ingesting, transforming, validating, and
 
 The platform is designed around reproducible local deployment, source-aware orchestration, historical backfills, idempotent ingestion, data-quality gates, and persistent analytical storage.
 
+[![Project 1 CI](https://github.com/lvmotong1314-code/chicago-taxi-data-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/lvmotong1314-code/chicago-taxi-data-platform/actions/workflows/ci.yml)
+
 ---
 
 ## Overview
@@ -460,7 +462,7 @@ The project was developed and validated using Docker from WSL.
 ### 1. Clone the repository
 
 ```bash
-git clone <YOUR_REPOSITORY_URL>
+git clone git@github.com:lvmotong1314-code/chicago-taxi-data-platform.git
 cd chicago-taxi-data-platform
 ```
 
@@ -732,6 +734,7 @@ The final platform was validated using a historical August 2026 backfill.
 | --- | ---: |
 | Historical interval tested | August 2026 |
 | Parquet rows | 598,551 |
+| Python tests | 3 passed / 0 failed |
 | Daily Parquet partitions | 31 |
 | Ingestion runtime | ~8 minutes |
 | dbt tests | 28 passed / 0 failed |
@@ -786,15 +789,22 @@ docker compose exec airflow-worker airflow dags list-import-errors
 
 GitHub Actions validates the repository automatically on push / pull request.
 
-The CI workflow covers the project test path, including Python and dbt validation.
+The final workflow covers:
 
-> Add the final CI badge here after the v1.0 workflow is frozen.
+- Python unit tests
+- Airflow DAG syntax validation
+- Docker Compose configuration validation
+- PostgreSQL schema bootstrap
+- CI fixture loading
+- Spark image build and interval smoke test
+- Airflow image build
+- dbt dependencies
+- dbt compile
+- dbt run
+- 28 dbt tests
 
-```markdown
-[![CI](<YOUR_GITHUB_ACTIONS_BADGE_URL>)](<YOUR_GITHUB_ACTIONS_URL>)
-```
+The v1.0 release candidate passed the complete CI workflow successfully.
 
----
 
 ## Repository Structure
 
